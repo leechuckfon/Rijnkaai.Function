@@ -8,15 +8,15 @@ namespace Rijnkaai
 {
     public class RijnkaaiReportFunction
     {
-        private readonly ISlackService _slackService;
+        private readonly IEnumerable<INotificationService> _notificationServices;
         private readonly IRijnkaaiService _rijnkaaiService;
         private readonly string ContainerName = "rijnkaaijsonlogs";
         private readonly string BlobName = "parking_report.json";
         private readonly BlobClient _blobClient;
 
-        public RijnkaaiReportFunction(ISlackService service, IRijnkaaiService rijnkaaiService)
+        public RijnkaaiReportFunction(IEnumerable<INotificationService> registeredServices, IRijnkaaiService rijnkaaiService)
         {
-            _slackService = service;
+            _notificationServices = registeredServices;
             _rijnkaaiService = rijnkaaiService;
 
             var blobClient = new BlobServiceClient(Environment.GetEnvironmentVariable("BlobStorage-ConnectionString"));
@@ -25,7 +25,7 @@ namespace Rijnkaai
         }
 
         [Function("GetClosingTimes")]
-        public async Task Run([TimerTrigger("0 0 16 * * *")] TimerInfo timerInfo)
+        public async Task Run([TimerTrigger("0 0 16 * * *", RunOnStartup = true)] TimerInfo timerInfo)
         {
             var toPostObject = await _rijnkaaiService.GetRijnkaaiClosedDates();
 
@@ -37,7 +37,7 @@ namespace Rijnkaai
 
             if (!sameBatch)
             {
-                await _slackService.PostMessageToSlack(toPostObject);
+                await Task.WhenAll(_notificationServices.Select(x => x.PostMultipleReports(toPostObject)));
 
                 await _blobClient.UploadAsync(BinaryData.FromObjectAsJson(toPostObject), overwrite: true);
             }
@@ -60,7 +60,7 @@ namespace Rijnkaai
 
             if (nextDayReport is not null)
             {
-                await _slackService.PostSingleMessageToSlack(nextDayReport);
+                await Task.WhenAll(_notificationServices.Select(x => x.PostSingleReport(nextDayReport)));
             }
         }
     }

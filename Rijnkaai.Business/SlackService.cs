@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Rijnkaai.Business
 {
-    public class SlackService : ISlackService
+    public class SlackService : INotificationService
     {
         private HttpClient client;
 
@@ -15,9 +15,9 @@ namespace Rijnkaai.Business
             client = factory.CreateClient();
         }
 
-        public async Task PostMessageToSlack(IEnumerable<ParkingReport> parkingReport)
+        public async Task PostMultipleReports(IEnumerable<ParkingReport> report)
         {
-            var reports = parkingReport.SelectMany(x =>
+            var reports = report.SelectMany(x =>
             {
                 return new SlackBlock[]
                 {
@@ -48,7 +48,7 @@ namespace Rijnkaai.Business
             _ = await client.PostAsync(Environment.GetEnvironmentVariable("Slack-PostUrl"), new StringContent(content, Encoding.UTF8, "application/json"));
         }
 
-        public async Task PostSingleMessageToSlack(ParkingReport parkingReport)
+        public async Task PostSingleReport(ParkingReport parkingReport)
         {
             var content = JsonConvert.SerializeObject(
                 new SlackMessage

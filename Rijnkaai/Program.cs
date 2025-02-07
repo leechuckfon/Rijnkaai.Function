@@ -18,7 +18,8 @@ builder.ConfigureFunctionsWebApplication();
 builder.Services.AddLogging();
 
 builder.Services.AddHttpClient();
-builder.Services.AddTransient<ISlackService, SlackService>();
+builder.Services.AddTransient<INotificationService, SlackService>();
+builder.Services.AddTransient<INotificationService, TeamsService>();
 builder.Services.AddTransient<IRijnkaaiService, RijnkaaiService>();
 
 JsonConvert.DefaultSettings = () => new JsonSerializerSettings
