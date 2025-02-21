@@ -3,6 +3,7 @@ using Newtonsoft.Json.Linq;
 using Rijnkaai.Abstractions;
 using Rijnkaai.Domain;
 using System.Globalization;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace Rijnkaai.Business
@@ -48,7 +49,7 @@ namespace Rijnkaai.Business
                 if (isRange.Count() > 0)
                 {
                     var skipped = isRange.First().Groups.Values.Skip(1);
-                    var dateRanges = skipped.Select(x => DateTime.Parse(x.Value, CultureInfo.GetCultureInfo("nl-BE")));
+                    var dateRanges = skipped.Select(x => DateTime.Parse(string.Join(" ",x.Value.Split(" ").Skip(1)), CultureInfo.GetCultureInfo("nl-BE")));
 
                     var message = split[1].Trim();
 
@@ -61,7 +62,7 @@ namespace Rijnkaai.Business
                     });
                 } else
                 {
-                    var dateObject = DateTime.Parse(date, CultureInfo.GetCultureInfo("nl-BE"));
+                    var dateObject = DateTime.Parse(string.Join(" ", date.Split(" ").Skip(1)), CultureInfo.GetCultureInfo("nl-BE"));
 
                     var message = split[1].Trim();
 
