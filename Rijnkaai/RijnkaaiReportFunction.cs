@@ -25,7 +25,7 @@ namespace Rijnkaai
         }
 
         [Function("GetClosingTimes")]
-        public async Task Run([TimerTrigger("0 0 16 * * *")] TimerInfo timerInfo)
+        public async Task Run([TimerTrigger("0 0 16 * * *", RunOnStartup = true)] TimerInfo timerInfo)
         {
             var toPostObject = await _rijnkaaiService.GetRijnkaaiClosedDates();
 
