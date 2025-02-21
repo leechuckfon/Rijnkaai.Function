@@ -38,6 +38,6 @@ jobs:
       uses: Azure/functions-action@v1
       id: fa
       with:
-        package: ./Rijnkaai
+        package: ./Rijnkaai/output
         app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
 
