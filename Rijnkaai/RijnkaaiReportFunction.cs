@@ -25,7 +25,7 @@ namespace Rijnkaai
         }
 
         [Function("GetClosingTimes")]
-        public async Task Run([TimerTrigger("0 0 16 * * *", RunOnStartup = true)] TimerInfo timerInfo)
+        public async Task Run([TimerTrigger("0 0 16 * * *")] TimerInfo timerInfo)
         {
             var toPostObject = await _rijnkaaiService.GetRijnkaaiClosedDates();
 
@@ -33,7 +33,7 @@ namespace Rijnkaai
 
             var reports = JsonConvert.DeserializeObject<IEnumerable<ParkingReport>>(currentContent.Value.Content.ToString());
 
-            var sameBatch = reports?.Sum(x => x.Date.Ticks) == toPostObject.Sum(x => x.Date.Ticks);
+            var sameBatch = reports?.Sum(x => x.StartDate.Ticks) == toPostObject.Sum(x => x.StartDate.Ticks);
 
             if (!sameBatch)
             {
@@ -56,7 +56,7 @@ namespace Rijnkaai
                 return;
             }
 
-            var nextDayReport = reports.Where(x => x.Date == DateTime.Now.Date.AddDays(1)).FirstOrDefault();
+            var nextDayReport = reports.Where(x => x.StartDate <= DateTime.Now.Date.AddDays(1) && DateTime.Now.Date.AddDays(1) <= x.EndDate).FirstOrDefault();
 
             if (nextDayReport is not null)
             {

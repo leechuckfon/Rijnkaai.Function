@@ -34,7 +34,7 @@ namespace Rijnkaai.Business
                 return Enumerable.Empty<ParkingReport>();
             }
 
-            var matches = Regex.Matches(root, "<li>([A-Z0-9a-z:\\s]*)<\\/li>");
+            var matches = Regex.Matches(root, "<li>([A-Z0-9a-z:\\s(),]*)<\\/li>");
 
             var reports = new List<ParkingReport>();
 
@@ -43,16 +43,35 @@ namespace Rijnkaai.Business
                 var split = match.Groups.Values.Last().Value.Split(":");
                 var date = split[0];
 
-                var dateObject = DateTime.Parse(date, CultureInfo.GetCultureInfo("nl-BE"));
+                var isRange = Regex.Matches(date, "Van (.+) tot en met (.+)");
 
-                var message = split[1].Trim();
-
-                reports.Add(new ParkingReport
+                if (isRange.Count() > 0)
                 {
-                    DisplayDate = date,
-                    Message = message,
-                    Date = dateObject
-                });
+                    var skipped = isRange.First().Groups.Values.Skip(1);
+                    var dateRanges = skipped.Select(x => DateTime.Parse(x.Value, CultureInfo.GetCultureInfo("nl-BE")));
+
+                    var message = split[1].Trim();
+
+                    reports.Add(new ParkingReport
+                    {
+                        DisplayDate = date,
+                        Message = message,
+                        StartDate = dateRanges.First(),
+                        EndDate = dateRanges.Last()
+                    });
+                } else
+                {
+                    var dateObject = DateTime.Parse(date, CultureInfo.GetCultureInfo("nl-BE"));
+
+                    var message = split[1].Trim();
+
+                    reports.Add(new ParkingReport
+                    {
+                        DisplayDate = date,
+                        Message = message,
+                        StartDate = dateObject
+                    });
+                }
             }
 
             return reports;
