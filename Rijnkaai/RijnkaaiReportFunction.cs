@@ -1,4 +1,5 @@
 using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
 using Microsoft.Azure.Functions.Worker;
 using Newtonsoft.Json;
 using Rijnkaai.Abstractions;
@@ -29,11 +30,19 @@ namespace Rijnkaai
         {
             var toPostObject = await _rijnkaaiService.GetRijnkaaiClosedDates();
 
-            var currentContent = await _blobClient.DownloadContentAsync();
+            var exists = await _blobClient.ExistsAsync();
 
-            var reports = JsonConvert.DeserializeObject<IEnumerable<ParkingReport>>(currentContent.Value.Content.ToString());
+            var sameBatch = false;
 
-            var sameBatch = reports?.Sum(x => x.StartDate.Ticks) == toPostObject.Sum(x => x.StartDate.Ticks);
+            if (exists.Value)
+            {
+                var currentContent = await _blobClient.DownloadContentAsync();
+
+                var reports = JsonConvert.DeserializeObject<IEnumerable<ParkingReport>>(currentContent.Value.Content.ToString());
+
+                sameBatch = reports?.Sum(x => x.StartDate.Ticks) == toPostObject.Sum(x => x.StartDate.Ticks);
+            }
+
 
             if (!sameBatch)
             {
